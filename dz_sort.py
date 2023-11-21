@@ -2,6 +2,7 @@ import shutil
 import sys
 import os
 import re
+import zipfile
 
 from pathlib import Path
 
@@ -74,15 +75,31 @@ def sorting_files(path):
     archives_extensions = ['.zip', '.gz', '.tar', '.ZIP', '.GZ', '.TAR']
     for ext in archives_extensions:
         for arh in path.glob(f'**/*{ext}'):
-            # Перевірка чи arc є файлом
+            # Перевірка чи arh є файлом
             if arh.is_file():
-                # Отримуємо ім'я архіву
-                arh_full_name = arh.name
-                arh_name, arh_extension = os.path.splitext(arh_full_name)
-                new_arh = path.joinpath('archives', arh_name)
-                shutil.unpack_archive(arh, new_arh)
-    print("Розпаковано архіви")
-    
+                try:
+                    with zipfile.ZipFile(arh, 'r') as zip_ref:
+                        # Отримуємо ім'я архіву
+                        arh_full_name = arh.name
+                        arh_name, arh_extension = os.path.splitext(arh_full_name)
+                        new_arh = path.joinpath('archives', arh_name)
+                        shutil.unpack_archive(arh, new_arh)
+                        os.remove(arh)
+                        
+                except zipfile.BadZipFile:
+                    print(f"Помилка: {arh.name} — архів пошкоджений")
+                    os.remove(arh)
+                    continue
+                except zipfile.LargeZipFile:
+                    print(f"Помилка: {arh.name} — архів занадто великий")
+                    os.remove(arh)
+                    continue
+                except Exception as e:
+                    print(f"Помилка при роботі з {arh.name}: {e}")
+                    os.remove(arh)
+                    continue
+    print("Архіви оброблено")
+
     # Переміщуємо файли, що залишилися
     # Шукаємо по директоріях
     for doc in path.glob('*/'):
