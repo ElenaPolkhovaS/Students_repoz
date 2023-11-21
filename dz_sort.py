@@ -84,8 +84,7 @@ def sorting_files(path):
                         arh_name, arh_extension = os.path.splitext(arh_full_name)
                         new_arh = path.joinpath('archives', arh_name)
                         shutil.unpack_archive(arh, new_arh)
-                        os.remove(arh)
-                        
+                        os.remove(arh)                       
                 except zipfile.BadZipFile:
                     print(f"Помилка: {arh.name} — архів пошкоджений")
                     os.remove(arh)
